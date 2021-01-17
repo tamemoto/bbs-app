@@ -1,0 +1,27 @@
+<div th:if="${pages.totalPages}" th:fragment="fragment-article-paging" class="Area_pager">
+    <div class="border_line"></div>
+    <ul>
+        <li th:class="${pages.first} ? 'disabled': ''">
+            <span th:if="${pages.first}"><<<</span>
+            <a th:if="${not pages.first}" th:href="@{${url}(pages=0)}"><<</a>
+        </li>
+        <li th:class="${pages.first} ? 'disabled' : ''">
+            <span th:if="${pages.first}"><</span>
+            <a th:if="${not pages.first}" th:href="@{${url}(pages=(${pages.number}-1))}"> < </a>
+        </li>
+        <li th:class="${pages.last} ? 'disabled' : ''">
+            <span th:if="${pages.last}">></span>
+            <a th:if="${not pages.last}" th:href="@{${url}(pages=(${pages.number}+1))}"> >> </a>
+        </li>
+        <li th:class="${pages.last} ? 'disabled' : ''">
+            <span th:if="${pages.last}">>></span>
+            <a th:if="${not pages.last}" th:href="@{${url}(pages=(${pages.totalPages}-1))}"> >> </a>
+        </li>
+    </ul>
+    <div>
+        <span th:text="${pages.number+1} + '/'+ ${pages.totalPages} + 'ページ'">
+            1/3
+        </span>
+    </div>
+    <div class="border_line"></div>
+</div>

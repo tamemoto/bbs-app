@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/css/index.css">
+    <script src="/js/article_index.js"></script>
+    <title>サンプル掲示板</title>
+</head>
+<body>
+<header class="Area_header">サンプル掲示板 管理者画面</header>
+<div th:class="'alert' + *{alert_class}" role="alert" th:id="flash-message" th:if="${message}" th:text="${message}"></div>
+<div class="border_line"></div>
+<form name="form_delete_articles" method="post" th:action="@{/admin/article/deletes}">
+    <span th:replace="fragments/articles :: fragment-articles"></span>
+    <div class="border_line"></div>
+    <div class="Area_multi_delete">
+        <button type="submit">
+            まとめて削除
+        </button>
+    </div>
+</form>
+<span th:replace="fragments/articles :: fragment-articles"></span>
+<span th:replace="fragments/paging :: fragment-article-paging"></span>
+<form th:action="@{/admin/article/delete/}" th:method="post" name="form_delete_article"></form>
+</body>
+</html>
