@@ -2,7 +2,9 @@ package com.example.app.bbs.unit.controller
 
 import com.example.app.bbs.app.controller.AdminController
 import com.example.app.bbs.domain.entity.Article
+import com.example.app.bbs.app.controller.UserController
 import com.example.app.bbs.domain.entity.UserRole
+
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.test.context.junit.jupiter.SpringExtension
@@ -21,6 +23,10 @@ import org.springframework.test.context.jdbc.Sql
 @SpringBootTest
 @AutoConfigureMockMvc
 class UserControllerTests {
+
+    @Autowired
+    lateinit var target: UserController
+
     @Autowired
     lateinit var mockMvc: MockMvc
 
@@ -164,6 +170,9 @@ class UserControllerTests {
                 MockMvcRequestBuilders.get("/user/index")
         )
                 .andExpect(status().isOk)
+                .andExpect(model().attributeExists("user"))
+                .andExpect(model().attributeExists("pages"))
+
     }
 
     @Test
@@ -175,4 +184,42 @@ class UserControllerTests {
         )
                 .andExpect(status().isOk)
     }
+
+    @Test
+    @Sql(statements = ["INSERT INTO users (name, email, password, role) VALUES ('test6', 'test6@example', 'dummy', 'USER');"])
+    @WithUserDetails(value = "test6")
+    fun registerArticleTest() {
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/user/article/register")
+                        .with(csrf())
+                        .param("name", "test")
+                        .param("title", "test")
+                        .param("contents", "test")
+                        .param("articleKey", "test")
+        )
+                .andExpect(status().is3xxRedirection)
+                .andExpect(view().name("redirect:/user/index"))
+                .andExpect(flash().attributeExists("message"))
+                .andExpect(flash().attribute("message", target.MESSAGE_REGISTER_NORMAL))
+    }
+
+    @Test
+    @Sql(statements = ["INSERT INTO users (name, email, password, role) VALUES ('test7', 'test7@example', 'dummy', 'USER');"])
+    @WithUserDetails(value = "test7")
+    fun registerArticleRequestErrorTest() {
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/user/article/register")
+                        .with(csrf())
+                        .param("name", "")
+                        .param("title", "")
+                        .param("contents", "")
+                        .param("articleKey", "")
+        )
+                .andExpect(status().is3xxRedirection)
+                .andExpect(view().name("redirect:/user/index"))
+                .andExpect(flash().attributeExists("errors"))
+                .andExpect(flash().attributeExists("request"))
+
+    }
+
 }

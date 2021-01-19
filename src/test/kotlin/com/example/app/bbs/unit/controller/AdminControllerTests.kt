@@ -116,7 +116,7 @@ class AdminControllerTests {
     }
 
     @Test
-    @Sql(statements = ["INSERT INTO users (name, email, password, role) VALUES ('admin', 'admin1@example.com', '\$2a\$10\$CPNJ.PlWH8k1aMhC6ytjIuwxYuLWKMXTP3H6h.LRnpumtccpvXEGy', 'USER');"])
+    @Sql(statements = ["INSERT INTO users (name, email, password, role) VALUES ('admin1', 'admin1@example.com', '\$2a\$10\$CPNJ.PlWH8k1aMhC6ytjIuwxYuLWKMXTP3H6h.LRnpumtccpvXEGy', 'USER');"])
     fun adminLoginAuthTests() {
         mockMvc.perform(
                 MockMvcRequestBuilders

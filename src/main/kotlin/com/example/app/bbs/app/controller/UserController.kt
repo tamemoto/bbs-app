@@ -1,7 +1,11 @@
 package com.example.app.bbs.app.controller
 
+import com.example.app.bbs.app.request.ArticleRequest
+import com.example.app.bbs.app.service.UserDetailsImpl
+import com.example.app.bbs.domain.repository.ArticleRepository
 import com.example.app.bbs.app.service.UserManagerServiceImpl
 import com.example.app.bbs.app.validator.UserValidator
+import com.example.app.bbs.domain.entity.Article
 import com.example.app.bbs.domain.entity.User
 import com.example.app.bbs.domain.entity.UserRole
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,9 +17,24 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.RequestParam
+
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
+import java.util.*
+
 
 @Controller
 class UserController {
+
+    val PAGE_SIGE: Int = 10
+    val MESSAGE_REGISTER_NORMAL = "正常に投稿できました"
+
+    @Autowired
+    lateinit var  articleRepository: ArticleRepository
 
     @Autowired
     lateinit var userManagerServiceImpl: UserManagerServiceImpl
@@ -66,7 +85,25 @@ class UserController {
     }
 
     @GetMapping("/user/index")
-    fun getUserIndex(): String {
+    fun getUserIndex(
+            @ModelAttribute articleRequest: ArticleRequest,
+            @AuthenticationPrincipal userDetailsImpl: UserDetailsImpl,
+            @RequestParam(value = "page",
+                    defaultValue = "0",
+                    required = false) page: Int,
+            model: Model
+    ): String {
+        model.addAttribute("user", userDetailsImpl.user)
+        val pageable: Pageable = PageRequest.of(
+                page,
+                this.PAGE_SIGE,
+                Sort.by(Sort.Direction.DESC, "updateAt")
+                        .and(Sort.by(Sort.Direction.ASC, "id"))
+        )
+
+        val articles: Page<Article> = articleRepository.findAllByUserId(userDetailsImpl.user.id, pageable)
+        model.addAttribute("pages", articles)
+
         return "user_index"
     }
 
@@ -78,5 +115,37 @@ class UserController {
     @GetMapping("/user/logout")
     fun getUserLogout(): String {
         return "redirect:/"
+    }
+
+    @PostMapping("/user/article/register")
+    fun userArticleRegister(
+            @Validated @ModelAttribute articleRequest: ArticleRequest,
+            result: BindingResult,
+            @AuthenticationPrincipal userDetailsImpl: UserDetailsImpl,
+            redirectAttributes: RedirectAttributes
+    ): String {
+        if(result.hasErrors()) {
+            redirectAttributes.addFlashAttribute("errors", result)
+            redirectAttributes.addFlashAttribute("request", articleRequest)
+
+            return "redirect:/user/index"
+        }
+
+        articleRepository.save(
+                Article(
+                        articleRequest.id,
+                        articleRequest.name,
+                        articleRequest.title,
+                        articleRequest.contents,
+                        articleRequest.articleKey,
+                        Date(),
+                        Date(),
+                        userDetailsImpl.user.id
+                )
+        )
+
+        redirectAttributes.addFlashAttribute("message", MESSAGE_REGISTER_NORMAL)
+
+        return "redirect:/user/index"
     }
 }
