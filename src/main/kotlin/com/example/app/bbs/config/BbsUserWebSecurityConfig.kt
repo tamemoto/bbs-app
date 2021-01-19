@@ -2,6 +2,7 @@ package com.example.app.bbs.config
 
 import com.example.app.bbs.app.service.UserDetailsServiceImpl
 import com.example.app.bbs.domain.entity.UserRole
+
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,15 +15,19 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher
-import org.springframework.util.AntPathMatcher
 
 @Configuration
 @EnableWebSecurity
-@Order(1)
+@Order(2)
 //この()は継承元のコンストラクタを呼び出している
-class BbsAdminWebSecurityConfig: WebSecurityConfigurerAdapter() {
+class BbsUserWebSecurityConfig: WebSecurityConfigurerAdapter() {
     @Autowired
     lateinit var userDetailsService: UserDetailsServiceImpl
+
+    @Bean
+    fun passwordEncoder(): PasswordEncoder {
+        return BCryptPasswordEncoder()
+    }
 
     @Override
     override fun configure(web: WebSecurity) {
@@ -36,20 +41,26 @@ class BbsAdminWebSecurityConfig: WebSecurityConfigurerAdapter() {
     @Override
     override fun configure(http: HttpSecurity) {
         http
-                .antMatcher("/admin/**")
+                // /user/以下に対して処理
+                .antMatcher("/user/**")
                 .authorizeRequests()
-                .antMatchers("/admin/login").permitAll()
-                .antMatchers("/admin/**").hasRole(UserRole.ADMIN.name)
+                // /user/loginと/user/signupは許可
+                .antMatchers("/user/login").permitAll()
+                .antMatchers("/user/signup").permitAll()
+                // /user/**は一般ユーザー扱い
+                .antMatchers("/user/**").hasRole(UserRole.USER.name)
+                // 条件に一致するURLは認可が必要
                 .anyRequest().authenticated()
                 .and()
-                .exceptionHandling().accessDeniedPage("/admin/login")
+                .exceptionHandling().accessDeniedPage("/user/login")
         http.formLogin()
-                .loginProcessingUrl("/admin/login/auth")
-                .loginPage("/admin/login")
+                .loginProcessingUrl("/user/login/auth")
+                .loginPage("/user/login")
+                .failureForwardUrl("/user/login")
+                .usernameParameter("email")
+                .passwordParameter("password")
         http.logout()
-                .logoutRequestMatcher(
-                        AntPathRequestMatcher("/admin/logout")
-                )
+                .logoutRequestMatcher(AntPathRequestMatcher("/logout**"))
                 .logoutSuccessUrl("/")
     }
 

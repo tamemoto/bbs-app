@@ -7,7 +7,12 @@
     <title>サンプル掲示板</title>
 </head>
 <body>
-<header class="Area_header">サンプル掲示板 管理者画面</header>
+<header class="Area_header">
+    <div class="Area_header_menu">
+        <a href="/admin/logout">ログアウト</a>
+    </div>
+    サンプル掲示板 管理者画面
+</header>
 <div th:class="'alert' + *{alert_class}" role="alert" th:id="flash-message" th:if="${message}" th:text="${message}"></div>
 <div class="border_line"></div>
 <form name="form_delete_articles" method="post" th:action="@{/admin/article/deletes}">

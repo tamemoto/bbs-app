@@ -77,4 +77,19 @@ class AdminController {
         redirectAttributes.addFlashAttribute("message", MESSAGE_DELETE_NORMAL)
         return "redirect:/admin/index"
     }
+
+    @GetMapping("/admin/login")
+    fun getAdminLogin(): String {
+        return "admin_login"
+    }
+
+    @PostMapping("/admin/login/auth")
+    fun adminLogin(): String {
+        return "redirect:/admin/index"
+    }
+
+    @PostMapping("/admin/logout")
+    fun adminLogout(): String {
+        return "redirect:/"
+    }
 }

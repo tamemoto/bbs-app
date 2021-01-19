@@ -19,5 +19,6 @@ data class User(
         var email: String = "",
         @field:NotBlank
         var password: String = "",
-        var role: Int = 0
+        @Enumerated(EnumType.STRING)
+        var role: UserRole = UserRole.USER
 )

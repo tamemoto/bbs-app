@@ -14,11 +14,12 @@ class UserDetailsServiceImpl: UserDetailsService {
     lateinit var userRepository: UserRepository
 
     override fun loadUserByUsername(username: String?): UserDetails {
-        println(username)
         var user: User? = null
         if (username != null) {
             user = userRepository.findByName(username)
-            println(user)
+            if(user == null) {
+                user = userRepository.findByEmail(username)
+            }
         }
 
         if(user == null) {
@@ -27,4 +28,5 @@ class UserDetailsServiceImpl: UserDetailsService {
 
         return UserDetailsImpl(user)
     }
+
 }

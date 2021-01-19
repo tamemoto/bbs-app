@@ -8,12 +8,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.security.test.context.support.WithMockUser
+//import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.context.support.WithUserDetails
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.jdbc.Sql
 
 @ExtendWith(SpringExtension::class)
@@ -37,7 +37,8 @@ class AdminControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "admin")
+//    @WithMockUser(username = "admin")
+    @WithUserDetails(value = "admin")
     fun authenticationTest() {
         mockMvc.perform(
                 MockMvcRequestBuilders.get("/admin/index")
@@ -50,7 +51,8 @@ class AdminControllerTests {
 
     @Test
     @Sql(statements = ["INSERT INTO article (name, title, contents, article_key) VALUES ('test', 'test', 'test', 'test');"])
-    @WithMockUser(username = "admin")
+//    @WithMockUser(username = "admin")
+    @WithUserDetails(value = "admin")
     fun singleDeleteExistsArticleTest() {
         var latestArticle: Article = target.articleRepository.findAll().last()
 
@@ -66,7 +68,8 @@ class AdminControllerTests {
     }
 
     @Test
-    @WithMockUser(username = "admin")
+//    @WithMockUser(username = "admin")
+    @WithUserDetails(value = "admin")
     fun multiDeleteNotSelectedArticleTest() {
         mockMvc.perform(
                 MockMvcRequestBuilders
@@ -85,7 +88,8 @@ class AdminControllerTests {
         "INSERT INTO article(name, title, contents, article_key) VALUES ('test', 'test', 'test', 'test');",
         "INSERT INTO article(name, title, contents, article_key) VALUES ('test', 'test', 'test', 'test');",
     ])
-    @WithMockUser(username = "admin")
+//    @WithMockUser(username = "admin")
+    @WithUserDetails(value = "admin")
     fun multiDeleteSelectedArticleTest() {
         val latestArticles: List<Article> = target.articleRepository.findAll()
         val ids = latestArticles.map { it.id }.joinToString(",")
@@ -100,5 +104,28 @@ class AdminControllerTests {
                 .andExpect(view().name("redirect:/admin/index"))
                 .andExpect(flash().attributeExists("message"))
                 .andExpect(flash().attribute("message", target.MESSAGE_DELETE_NORMAL))
+    }
+
+    @Test
+    fun getAdminTest() {
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .get("/admin/login")
+        )
+                .andExpect(status().isOk)
+    }
+
+    @Test
+    @Sql(statements = ["INSERT INTO users (name, email, password, role) VALUES ('admin', 'admin1@example.com', '\$2a\$10\$CPNJ.PlWH8k1aMhC6ytjIuwxYuLWKMXTP3H6h.LRnpumtccpvXEGy', 'USER');"])
+    fun adminLoginAuthTests() {
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .post("/admin/login/auth")
+                        .with(csrf())
+                        .param("username", "admin1")
+                        .param("password", "root")
+        )
+                .andExpect(status().is3xxRedirection)
+                .andExpect(redirectedUrl("/"))
     }
 }
